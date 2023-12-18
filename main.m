@@ -50,10 +50,6 @@ sigma_est_yw = a_est_yw.' * rx;
 
 %% LMS normalise
 
-d = x - u;
-H = ones(1,P);
-alpha = 0.7;
-
 % for i=1:Nit
 %     for k=1:N
 %         X = x(k:k+P-1);
@@ -67,9 +63,13 @@ alpha = 0.7;
 % 
 %     end
 % end
-Nit=1000;
+Nit=5000;
 e = zeros(1,Nit);
 x_norm  = x/(norm(x)^2);
+d = x - u;
+H = ones(1,P);
+alpha = 0.1;
+
 for k = 1:Nit
     for i = P+1:N
 
@@ -89,8 +89,10 @@ for k = 1:Nit
     % Calcul de la variance du bruit à chaque itération
     %H_mat(k,:) = H;
     %e_lms = d(k) - H * X.';
-    sigma_lms(k) = mean(abs(e).^2);
+    sigma_lms_norm(k) = var(e,1);%mean(abs(e).^2);
 end
+
+sigma_lms = (norm(x)^2) * sigma_lms_norm;
 
 
 % evolution des parametres au cours du temps,
