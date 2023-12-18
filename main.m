@@ -25,6 +25,9 @@ x = filter(b,a,u);
 TF_S = fftshift(fft(x, Nfft));
 Spectre_P = abs(TF_S).^2 /Nfft;  % --> observation des resonances, comparer avec th
 
+sigma_est_var = var(xcorr(x, P, 'unbiased'));
+
+
 %% Estimation des paramètres AR et de la variance du processus générateur.
 
 % Yules-Walker
@@ -45,7 +48,7 @@ a_est_yw = round(abs(a_est_yw),2);
 % estimation du bruit
 rx = xcorr(x, P, 'unbiased');
 rx = rx(1:P).';
-sigma_est_yw = a_est_yw.' * rx;
+sigma_est_yw = abs(a_est_yw.' * rx);
 
 
 %% LMS normalise
@@ -66,9 +69,10 @@ sigma_est_yw = a_est_yw.' * rx;
 Nit=5000;
 e = zeros(1,Nit);
 x_norm  = x/(norm(x)^2);
+%d = x_norm - u/(norm(u)^2);
 d = x - u;
 H = ones(1,P);
-alpha = 0.1;
+alpha = 0.01;
 
 for k = 1:Nit
     for i = P+1:N
@@ -89,10 +93,10 @@ for k = 1:Nit
     % Calcul de la variance du bruit à chaque itération
     %H_mat(k,:) = H;
     %e_lms = d(k) - H * X.';
-    sigma_lms_norm(k) = var(e,1);%mean(abs(e).^2);
+    sigma_lms_norm(k) = mean(abs(e).^2);
 end
 
-sigma_lms = (norm(x)^2) * sigma_lms_norm;
+sigma_lms = (norm(x)) * sigma_lms_norm;
 
 
 % evolution des parametres au cours du temps,
@@ -112,6 +116,8 @@ sigma_lms = (norm(x)^2) * sigma_lms_norm;
 % Tracez la convergence de la variance du bruit avec la méthode LMS
 figure;
 plot(1:Nit, sigma_lms, 'o-', 'LineWidth', 1.5);
+% hold on,
+% plot(1:Nit, sigma_lms_norm, 'o-', 'LineWidth', 1.5);
 xlabel('Itération');
 ylabel('Variance du bruit estimée');
 title('Convergence de la variance du bruit avec la méthode LMS');
